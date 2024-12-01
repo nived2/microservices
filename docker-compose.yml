@@ -1,0 +1,102 @@
+version: '3.8'
+
+services:
+  nginx:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    networks:
+      - frontend
+      - backend
+
+  api-gateway:
+    build: ./api-gateway
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://mongodb:27017/microservices
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - backend
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+
+  service-a:
+    build: ./service-a
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://mongodb:27017/microservices
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - backend
+    deploy:
+      replicas: 2
+      update_config:
+        parallelism: 1
+        delay: 10s
+      restart_policy:
+        condition: on-failure
+
+  service-b:
+    build: ./service-b
+    environment:
+      - NODE_ENV=production
+      - REDIS_URL=redis://redis:6379
+      - MONGO_URL=mongodb://mongodb:27017/microservices
+    depends_on:
+      - redis
+      - mongodb
+    networks:
+      - backend
+    deploy:
+      replicas: 2
+
+  service-c:
+    build: ./service-c
+    environment:
+      - NODE_ENV=production
+      - MONGO_URL=mongodb://mongodb:27017/microservices
+    depends_on:
+      - mongodb
+    networks:
+      - backend
+
+  mongodb:
+    image: mongo:latest
+    volumes:
+      - mongodb_data:/data/db
+    networks:
+      - backend
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=secret
+    ports:
+      - "27017:27017"
+
+  redis:
+    image: redis:alpine
+    volumes:
+      - redis_data:/data
+    networks:
+      - backend
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+
+networks:
+  frontend:
+  backend:
+
+volumes:
+  mongodb_data:
+  redis_data:
