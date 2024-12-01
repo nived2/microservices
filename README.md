@@ -213,10 +213,12 @@ npm run test:all
 4. Push to the branch
 5. Create a Pull Request
 
+## Support
+
+For issues and support:
+- Create an issue on GitHub
+- Contact: nivedmahendran@proton.me
+
 ## License
 
 MIT License - feel free to use this project for your own portfolio
-
-## Contact
-
-Nived Mahendran - nivedmahendran547@gmail.com
